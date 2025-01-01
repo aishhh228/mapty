@@ -12,6 +12,8 @@ let map, mapEvent;
 class Workout{
     date = new Date();
     id = (Date.now()+ '').slice(-10);
+    clicks = 0;
+
     constructor(coords, duration, distance){
         this.coords = coords; //[lat, lng]
         this.duration = duration; // in min
@@ -21,6 +23,9 @@ class Workout{
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${months [this.date.getMonth()]} ${this.date.getDate()} `
     
+    }
+    click(){
+        this.clicks++;
     }
 
 }
@@ -62,11 +67,13 @@ class App{
     #map;
     #mapEvent;
     #workouts = [];
+    #mapZoomLevel = 13;
     constructor(){
       
         this._getPosition();
         form.addEventListener('submit', this._newWorkout.bind(this));
         inputType.addEventListener('change',this._toggleElevationField); 
+        containerWorkouts.addEventListener('click', this._moveToPopup.bind(this))
     }
 
     _getPosition(){
@@ -83,7 +90,7 @@ class App{
       
         console.log(`https://www.google.com/maps/place//@${latitude},${longitude}`);
         const coords = [latitude, longitude]
-        this.#map = L.map('map').setView(coords, 13);
+        this.#map = L.map('map').setView(coords, this.#mapZoomLevel);
     
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -226,6 +233,21 @@ class App{
           </div>
         `
         form.insertAdjacentHTML('afterend', html)
+    }
+
+    _moveToPopup(e){
+        const workoutEl = e.target.closest('.workout');
+      
+        if(!workoutEl) return;
+        const workout = this.#workouts.find(work => work.id === workoutEl.dataset.id);
+      
+        this.#map.setView(workout.coords, this.#mapZoomLevel, {
+            animate: true,
+            pan: {
+                duration: 1,
+            }
+        });
+        workout.click();
     }
 }
 
