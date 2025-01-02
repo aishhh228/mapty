@@ -12,7 +12,7 @@ let map, mapEvent;
 class Workout{
     date = new Date();
     id = (Date.now()+ '').slice(-10);
-    clicks = 0;
+  
 
     constructor(coords, duration, distance){
         this.coords = coords; //[lat, lng]
@@ -24,9 +24,7 @@ class Workout{
         this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${months [this.date.getMonth()]} ${this.date.getDate()} `
     
     }
-    click(){
-        this.clicks++;
-    }
+ 
 
 }
 
@@ -37,6 +35,7 @@ class Cycling extends Workout{
         this.elevationGain = elevationGain;
         this.calcSpeed();
         this._setDescription();
+       
     }
     calcSpeed(){
         // Km/hr
@@ -69,11 +68,16 @@ class App{
     #workouts = [];
     #mapZoomLevel = 13;
     constructor(){
-      
+      //Get positon of user's
         this._getPosition();
+        //Get the data from Local storage
+        this._getLocalStorage();
+
+        //Attach event handler
         form.addEventListener('submit', this._newWorkout.bind(this));
         inputType.addEventListener('change',this._toggleElevationField); 
         containerWorkouts.addEventListener('click', this._moveToPopup.bind(this))
+       
     }
 
     _getPosition(){
@@ -85,7 +89,7 @@ class App{
     }
     
     _loadMap(position){
-        console.log(this);
+       
         const {latitude, longitude} = position.coords;
       
         console.log(`https://www.google.com/maps/place//@${latitude},${longitude}`);
@@ -106,7 +110,6 @@ class App{
         inputDistance.focus();
     }
 
-    
     _hideForm() {
         // Empty inputs
         inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value =
@@ -171,7 +174,7 @@ class App{
         // Hide form + clear input fields
         this._hideForm();
 
-        inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = '';
+      this._setLocalStroage();
     }
 
     //Display Marker
@@ -247,8 +250,28 @@ class App{
                 duration: 1,
             }
         });
-        workout.click();
+     
     }
+
+   _setLocalStroage(){
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+
+   };
+
+   _getLocalStorage(){
+    const data = JSON.parse(localStorage.getItem('workouts'));
+    console.log(data);
+
+    if(!data) return
+    this.#workouts = data;
+    this.#workouts.forEach(work => {
+        this._rednerWorkout(work)
+    })
+   };
+   reset(){
+    localStorage.removeItem('workouts');
+    location.reload();
+   }
 }
 
 const app = new App();
